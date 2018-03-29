@@ -208,6 +208,18 @@ inquirer
     console.log(`  Adding ${cyan('Babel')} preset`);
     appPackage.babel = {
       presets: ['react-app'],
+      plugins: [
+        'transform-decorators-legacy',
+        'transform-do-expressions',
+        [
+          'import',
+          {
+            libraryName: 'antd',
+            libraryDirectory: 'es',
+            style: 'css',
+          },
+        ],
+      ],
     };
 
     // Add ESlint config

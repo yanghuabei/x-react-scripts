@@ -88,7 +88,8 @@ module.exports = {
     // https://github.com/facebookincubator/create-react-app/issues/253
     modules: ['node_modules', paths.appNodeModules].concat(
       // It is guaranteed to exist because we tweak it in `env.js`
-      process.env.NODE_PATH.split(path.delimiter).filter(Boolean)
+      process.env.NODE_PATH.split(path.delimiter).filter(Boolean),
+      paths.appSrc
     ),
     // These are the reasonable defaults supported by the Node ecosystem.
     // We also include JSX as a common component filename extension to support
@@ -176,6 +177,14 @@ module.exports = {
               // @remove-on-eject-begin
               babelrc: false,
               presets: [require.resolve('babel-preset-react-app')],
+              plugins: [
+                require.resolve('babel-plugin-transform-decorators-legacy'),
+                require.resolve('babel-plugin-transform-do-expressions'),
+                [
+                  require.resolve('babel-plugin-import'),
+                  { libraryName: 'antd', libraryDirectory: 'es', style: 'css' },
+                ],
+              ],
               // @remove-on-eject-end
               compact: true,
             },
@@ -193,7 +202,7 @@ module.exports = {
           // use the "style" loader inside the async code so CSS from them won't be
           // in the main CSS file.
           {
-            test: /\.css$/,
+            test: /\.less$/,
             loader: ExtractTextPlugin.extract(
               Object.assign(
                 {
@@ -210,6 +219,9 @@ module.exports = {
                         importLoaders: 1,
                         minimize: true,
                         sourceMap: shouldUseSourceMap,
+                        modules: true,
+                        localIdentName: '[name]__[local]___[hash:base64:5]',
+                        camelCase: true,
                       },
                     },
                     {
@@ -232,12 +244,38 @@ module.exports = {
                         ],
                       },
                     },
+                    require.resolve('less-loader'),
                   ],
                 },
                 extractTextPluginOptions
               )
             ),
+            exclude: /node_modues/,
+
             // Note: this won't work without `new ExtractTextPlugin()` in `plugins`.
+          },
+          // for antd
+          {
+            test: /\.css$/,
+            use: ExtractTextPlugin.extract(
+              Object.assign(
+                {
+                  fallback: require.resolve('style-loader'),
+                  use: [
+                    {
+                      loader: require.resolve('css-loader'),
+                      options: {
+                        importLoaders: 1,
+                        minimize: true,
+                        sourceMap: shouldUseSourceMap,
+                      },
+                    },
+                  ],
+                },
+                extractTextPluginOptions
+              )
+            ),
+            include: /node_modules/,
           },
           // "file" loader makes sure assets end up in the `build` folder.
           // When you `import` an asset, you get its filename.

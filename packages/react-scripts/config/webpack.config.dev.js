@@ -82,7 +82,8 @@ module.exports = {
     // https://github.com/facebookincubator/create-react-app/issues/253
     modules: ['node_modules', paths.appNodeModules].concat(
       // It is guaranteed to exist because we tweak it in `env.js`
-      process.env.NODE_PATH.split(path.delimiter).filter(Boolean)
+      process.env.NODE_PATH.split(path.delimiter).filter(Boolean),
+      paths.appSrc
     ),
     // These are the reasonable defaults supported by the Node ecosystem.
     // We also include JSX as a common component filename extension to support
@@ -169,6 +170,14 @@ module.exports = {
               // @remove-on-eject-begin
               babelrc: false,
               presets: [require.resolve('babel-preset-react-app')],
+              plugins: [
+                require.resolve('babel-plugin-transform-decorators-legacy'),
+                require.resolve('babel-plugin-transform-do-expressions'),
+                [
+                  require.resolve('babel-plugin-import'),
+                  { libraryName: 'antd', libraryDirectory: 'es', style: 'css' },
+                ],
+              ],
               // @remove-on-eject-end
               // This is a feature of `babel-loader` for webpack (not Babel itself).
               // It enables caching results in ./node_modules/.cache/babel-loader/
@@ -182,13 +191,17 @@ module.exports = {
           // In production, we use a plugin to extract that CSS to a file, but
           // in development "style" loader enables hot editing of CSS.
           {
-            test: /\.css$/,
+            test: /\.(css|less)$/,
             use: [
               require.resolve('style-loader'),
               {
                 loader: require.resolve('css-loader'),
                 options: {
                   importLoaders: 1,
+                  modules: true,
+                  sourceMap: true,
+                  localIdentName: '[name]__[local]___[hash:base64:5]',
+                  camelCase: true,
                 },
               },
               {
@@ -211,7 +224,19 @@ module.exports = {
                   ],
                 },
               },
+              require.resolve('less-loader'),
             ],
+            exclude: /node_modules/,
+          },
+
+          // for antd
+          {
+            test: /\.css$/,
+            use: [
+              require.resolve('style-loader'),
+              require.resolve('css-loader'),
+            ],
+            include: /node_modules/,
           },
           // "file" loader makes sure those assets get served by WebpackDevServer.
           // When you `import` an asset, you get its (virtual) filename.
