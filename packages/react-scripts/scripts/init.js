@@ -41,6 +41,14 @@ module.exports = function(
     build: 'react-scripts build',
     test: 'react-scripts test --env=jsdom',
     eject: 'react-scripts eject',
+    mock: 'react-scripts mock',
+  };
+
+  // Setup mock proxy
+  appPackage.proxy = {
+    '/mock/api': {
+      target: 'http://127.0.0.1:5000',
+    },
   };
 
   fs.writeFileSync(
@@ -181,6 +189,7 @@ module.exports = function(
   console.log();
   console.log('Happy hacking!');
 };
+/*
 
 function isReactInstalled(appPackage) {
   const dependencies = appPackage.dependencies || {};
@@ -190,3 +199,4 @@ function isReactInstalled(appPackage) {
     typeof dependencies['react-dom'] !== 'undefined'
   );
 }
+*/

@@ -222,6 +222,13 @@ inquirer
       ],
     };
 
+    // Add mock proxy config
+    appPackage.proxy = {
+      '/mock/api': {
+        target: 'http://127.0.0.1:5000',
+      },
+    };
+
     // Add ESlint config
     console.log(`  Adding ${cyan('ESLint')} configuration`);
     appPackage.eslintConfig = {

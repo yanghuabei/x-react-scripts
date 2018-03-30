@@ -1,6 +1,7 @@
 import React from 'react';
 import { Menu, Icon } from 'antd';
 import { Link } from 'react-router-dom';
+import { retainSearchPath } from 'common/util';
 
 const { SubMenu } = Menu;
 
@@ -21,10 +22,10 @@ export default function SiderMenu() {
         }
       >
         <Menu.Item key="1">
-          <Link to="/start">/start</Link>
+          <Link to={retainSearchPath('/welcome')}>welcome</Link>
         </Menu.Item>
         <Menu.Item key="2">
-          <Link to="/option2">/option2</Link>
+          <Link to={retainSearchPath('/user/list')}>user list</Link>
         </Menu.Item>
         <Menu.Item key="3">
           <Link to="/option3">/option3</Link>

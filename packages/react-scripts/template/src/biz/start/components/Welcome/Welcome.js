@@ -1,8 +1,8 @@
 import React from 'react';
 import logo from './logo.svg';
-import styles from './Start.less';
+import styles from './Welcome.less';
 
-export default function Start() {
+export default function Welcome() {
   return (
     <div style={{ textAlign: 'center' }}>
       <header className={styles.header}>
