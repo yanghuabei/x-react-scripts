@@ -12,4 +12,12 @@ const babelJest = require('babel-jest');
 module.exports = babelJest.createTransformer({
   presets: [require.resolve('babel-preset-react-app')],
   babelrc: false,
+  plugins: [
+    require.resolve('babel-plugin-transform-decorators-legacy'),
+    require.resolve('babel-plugin-transform-do-expressions'),
+    [
+      require.resolve('babel-plugin-import'),
+      { libraryName: 'antd', libraryDirectory: 'es', style: 'css' },
+    ],
+  ],
 });
