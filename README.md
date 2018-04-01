@@ -1,4 +1,4 @@
-# exodia-react-scripts
+# x-react-scripts
 
 ### ⚠️ 声明:
 > 这不是 ```create-react-app``` 的 fork. 仅仅是fork  ```react-scripts``` 来扩展一些特性.
@@ -79,7 +79,7 @@ TBD
 可以根据自己的项目需要灵活调整。
 
 ### ❔如何使用
-```create-react-app my-app --scripts-version exodia-react-scripts```
+```create-react-app my-app --scripts-version x-react-scripts```
 
 ### 未来计划
 

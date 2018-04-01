@@ -1,8 +1,8 @@
 {
-  "name": "exodia-react-scripts",
-  "version": "0.0.1",
+  "name": "x-react-scripts",
+  "version": "0.0.1-alpha.1",
   "description": "Configuration and scripts for Create React App.",
-  "repository": "facebookincubator/create-react-app",
+  "repository": "Exodia/create-react-app",
   "license": "MIT",
   "engines": {
     "node": ">=6"
