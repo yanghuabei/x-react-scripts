@@ -18,7 +18,7 @@
 - [axios](https://github.com/axios/axios)
 - [react-router-dom](https://reacttraining.com/react-router/)
 
-#### 按业务单元划分的项目结构
+#### Domain Style的项目结构
 
 当项目初始化完毕后，有如下结构:
 
@@ -54,7 +54,7 @@ my-app/
 - src/services：放置全局服务，如系统信息等接口请求
 - src/Routes.js：放置应用路由配置，业务子路由应放置在业务模块目录下
 
-##### 为何要按业务单元划分的项目结构？
+##### 为何是Domain Style的项目结构？
 
 TBD
 
