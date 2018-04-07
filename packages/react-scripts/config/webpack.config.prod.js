@@ -171,7 +171,7 @@ module.exports = {
           // Process JS with Babel.
           {
             test: /\.(js|jsx|mjs)$/,
-            include: paths.appSrc,
+            include: [paths.appSrc, /node_modules\/ant-design-pro\/es/],
             loader: require.resolve('babel-loader'),
             options: {
               // @remove-on-eject-begin
@@ -244,13 +244,18 @@ module.exports = {
                         ],
                       },
                     },
-                    require.resolve('less-loader'),
+                    {
+                      loader: require.resolve('less-loader'),
+                      options: {
+                        javascriptEnabled: true,
+                      },
+                    },
                   ],
                 },
                 extractTextPluginOptions
               )
             ),
-            exclude: /node_modues/,
+            include: [paths.appSrc, /node_modules\/ant-design-pro\/es/],
 
             // Note: this won't work without `new ExtractTextPlugin()` in `plugins`.
           },
