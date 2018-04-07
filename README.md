@@ -15,6 +15,7 @@
 #### 框架与库的集成
 
 - [antd 3.x](https://ant.design)
+- [ant-design-pro 1.2.x](https://pro.ant.design/components)
 - [axios](https://github.com/axios/axios)
 - [react-router-dom](https://reacttraining.com/react-router/)
 
@@ -51,12 +52,14 @@ my-app/
 - src/biz: 放置业务单元模块，在业务模块下可以递归的继续切分子业务模块，可以将src目录看成根业务模块
 - src/common: 放置通用的功能模块，如工具，封装好的http请求模块等
 - src/components：放置归属于全局（应用）级别的组件，如导航栏，消息通知等
-- src/services：放置全局服务，如系统信息等接口请求
+- src/services：放置全局服务，如系统信息等接口请求，若服务数量少，可以直接使用单文件services.js
 - src/Routes.js：放置应用路由配置，业务子路由应放置在业务模块目录下
 
 ##### 为何是Domain Style的项目结构？
 
-TBD
+1. 可伸缩性强：即能适应中小规模项目，又能适应大规模项目，当项目进一步演进为平台化级应用时，Domain Style能够很好的支持业务组件化
+
+2. 可阅读性强：强制让开发人员在开发阶段想清楚某个模块的业务归属权，当阅读项目代码时，能够很好的从项目结构了解到宏观的业务功能
 
 #### Mock 服务支持
 
