@@ -23,9 +23,6 @@ const getClientEnvironment = require('./env');
 
 const getThemeConfig = require('./theme');
 
-// antd theme config
-const themeConfig = getThemeConfig();
-
 // Webpack uses `publicPath` to determine where the app is being served from.
 // It requires a trailing slash, or the file assets will get an incorrect path.
 const publicPath = paths.servedPath;
@@ -40,6 +37,9 @@ const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
 const publicUrl = publicPath.slice(0, -1);
 // Get environment variables to inject into our app.
 const env = getClientEnvironment(publicUrl);
+
+// antd theme config
+const themeConfig = getThemeConfig({ publicPath });
 
 // Assert this just to be safe.
 // Development builds of React are slow and not intended for production.

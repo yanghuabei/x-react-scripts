@@ -6,9 +6,11 @@ const paths = require('./paths');
 
 const theme = require(paths.appPackageJson).theme;
 
-module.exports = function() {
+module.exports = function(options) {
   if (typeof theme === 'string') {
-    return require(path.resolve(fs.realpathSync(process.cwd()), theme))();
+    return require(path.resolve(fs.realpathSync(process.cwd()), theme))(
+      options
+    );
   }
   return theme;
 };

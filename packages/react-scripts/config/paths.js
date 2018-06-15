@@ -50,7 +50,6 @@ function getServedPath(appPackageJson) {
 module.exports = {
   dotenv: resolveApp('.env'),
   appBuild: resolveApp('build'),
-  appAmdBuild: resolveApp('build-amd'),
   appPublic: resolveApp('public'),
   appHtml: resolveApp('public/index.html'),
   appIndexJs: resolveApp('src/index.js'),
@@ -62,6 +61,7 @@ module.exports = {
   appNodeModules: resolveApp('node_modules'),
   publicUrl: getPublicUrl(resolveApp('package.json')),
   servedPath: getServedPath(resolveApp('package.json')),
+  amdServedPath: require(resolveApp('package.json')).amdServedPath,
 };
 
 // @remove-on-eject-begin
@@ -72,7 +72,6 @@ module.exports = {
   dotenv: resolveApp('.env'),
   appPath: resolveApp('.'),
   appBuild: resolveApp('build'),
-  appAmdBuild: resolveApp('build-amd'),
   appPublic: resolveApp('public'),
   appHtml: resolveApp('public/index.html'),
   appIndexJs: resolveApp('src/index.js'),
@@ -85,6 +84,7 @@ module.exports = {
   appNodeModules: resolveApp('node_modules'),
   publicUrl: getPublicUrl(resolveApp('package.json')),
   servedPath: getServedPath(resolveApp('package.json')),
+  amdServedPath: require(resolveApp('package.json')).amdServedPath,
   // These properties only exist before ejecting:
   ownPath: resolveOwn('.'),
   ownNodeModules: resolveOwn('node_modules'), // This is empty on npm 3
@@ -105,7 +105,6 @@ if (
     dotenv: resolveOwn('template/.env'),
     appPath: resolveApp('.'),
     appBuild: resolveOwn('../../build'),
-    appAmdBuild: resolveApp('../../build-amd'),
     appPublic: resolveOwn('template/public'),
     appHtml: resolveOwn('template/public/index.html'),
     appIndexJs: resolveOwn('template/src/index.js'),
@@ -117,6 +116,7 @@ if (
     appNodeModules: resolveOwn('node_modules'),
     publicUrl: getPublicUrl(resolveOwn('package.json')),
     servedPath: getServedPath(resolveOwn('package.json')),
+    amdServedPath: require(resolveApp('package.json')).amdServedPath,
     // These properties only exist before ejecting:
     ownPath: resolveOwn('.'),
     ownNodeModules: resolveOwn('node_modules'),

@@ -19,16 +19,13 @@ const paths = require('./paths');
 const getClientEnvironment = require('./env');
 const getThemeConfig = require('./theme');
 
-// antd theme config
-const themeConfig = getThemeConfig();
-
 const amdEntry = require(paths.appPackageJson).amdEntry || {
   amd: paths.appAmdJs,
 };
 
 // Webpack uses `publicPath` to determine where the app is being served from.
 // It requires a trailing slash, or the file assets will get an incorrect path.
-const publicPath = paths.servedPath;
+const publicPath = paths.amdServedPath;
 // Some apps do not use client-side routing with pushState.
 // For these, "homepage" can be set to "." to enable relative asset paths.
 const shouldUseRelativeAssetPaths = publicPath === './';
@@ -41,6 +38,9 @@ const publicUrl = publicPath.slice(0, -1);
 // Get environment variables to inject into our app.
 const env = getClientEnvironment(publicUrl);
 
+// antd theme config
+const themeConfig = getThemeConfig({ publicPath });
+
 // Assert this just to be safe.
 // Development builds of React are slow and not intended for production.
 if (env.stringified['process.env'].NODE_ENV !== '"production"') {
@@ -48,7 +48,7 @@ if (env.stringified['process.env'].NODE_ENV !== '"production"') {
 }
 
 // Note: defined here because it will be used more than once.
-const cssFilename = 'static/css/main.css';
+const cssFilename = 'amd/css/main.css';
 
 // ExtractTextPlugin expects the build output to be flat.
 // (See https://github.com/webpack-contrib/extract-text-webpack-plugin/issues/27)
@@ -72,12 +72,13 @@ module.exports = {
   entry: amdEntry,
   output: {
     // The build folder.
-    path: paths.appAmdBuild,
+    path: paths.appBuild,
+
     libraryTarget: 'amd',
     // Generated JS file names (with nested folders).
     // There will be one main bundle, and one file per asynchronous chunk.
     // We don't currently advertise code splitting but Webpack supports it.
-    filename: 'static/js/[name].js',
+    filename: 'amd/js/[name].js',
     // We inferred the "public path" (such as / or /my-project) from homepage.
     publicPath: publicPath,
     // Point sourcemap entries to original disk location (format as URL on Windows)
@@ -170,7 +171,7 @@ module.exports = {
             loader: require.resolve('url-loader'),
             options: {
               limit: 10000,
-              name: 'static/media/[name].[hash:8].[ext]',
+              name: 'amd/media/[name].[hash:8].[ext]',
             },
           },
           // Process JS with Babel.
@@ -326,7 +327,7 @@ module.exports = {
             // by webpacks internal loaders.
             exclude: [/\.(js|jsx|mjs)$/, /\.html$/, /\.json$/],
             options: {
-              name: 'static/media/[name].[hash:8].[ext]',
+              name: 'amd/media/[name].[hash:8].[ext]',
             },
           },
           // ** STOP ** Are you adding a new loader?
