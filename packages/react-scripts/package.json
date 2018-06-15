@@ -1,6 +1,6 @@
 {
-  "name": "x-react-scripts",
-  "version": "0.0.2-alpha.1",
+  "name": "x-react-scripts-for-pa",
+  "version": "0.0.4-alpha.1",
   "description": "Configuration and scripts for Create React App.",
   "repository": "Exodia/create-react-app",
   "license": "MIT",
@@ -57,6 +57,7 @@
     "promise": "8.0.1",
     "raf": "3.4.0",
     "react-dev-utils": "^5.0.0",
+    "string-replace-webpack-plugin": "^0.1.3",
     "style-loader": "0.19.0",
     "sw-precache-webpack-plugin": "0.11.4",
     "url-loader": "0.6.2",

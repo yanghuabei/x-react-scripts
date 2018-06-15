@@ -19,6 +19,7 @@ const eslintFormatter = require('react-dev-utils/eslintFormatter');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const getClientEnvironment = require('./env');
 const paths = require('./paths');
+const getThemeConfig = require('./theme');
 
 // Webpack uses `publicPath` to determine where the app is being served from.
 // In development, we always serve from the root. This makes config easier.
@@ -29,6 +30,9 @@ const publicPath = '/';
 const publicUrl = '';
 // Get environment variables to inject into our app.
 const env = getClientEnvironment(publicUrl);
+
+// antd theme config
+const themeConfig = getThemeConfig({ publicPath });
 
 // This is the development configuration.
 // It is focused on developer experience and fast rebuilds.
@@ -164,7 +168,7 @@ module.exports = {
           // Process JS with Babel.
           {
             test: /\.(js|jsx|mjs)$/,
-            include: [paths.appSrc, /node_modules\/ant-design-pro\/es/],
+            include: [paths.appSrc, /node_modules\/antd\/es/],
             loader: require.resolve('babel-loader'),
             options: {
               // @remove-on-eject-begin
@@ -175,7 +179,7 @@ module.exports = {
                 require.resolve('babel-plugin-transform-do-expressions'),
                 [
                   require.resolve('babel-plugin-import'),
-                  { libraryName: 'antd', libraryDirectory: 'es', style: 'css' },
+                  { libraryName: 'antd', libraryDirectory: 'es', style: true },
                 ],
               ],
               // @remove-on-eject-end
@@ -231,15 +235,43 @@ module.exports = {
                 },
               },
             ],
-            include: [paths.appSrc, /node_modules\/ant-design-pro\/es/],
+            // exclude: /node_modules/,
+            include: [paths.appSrc],
           },
 
           // for antd
           {
-            test: /\.css$/,
+            test: /antd.*\.less$/,
             use: [
               require.resolve('style-loader'),
-              require.resolve('css-loader'),
+              { loader: 'css-loader', options: { sourceMap: 1 } },
+              {
+                loader: require.resolve('postcss-loader'),
+                options: {
+                  // Necessary for external CSS imports to work
+                  // https://github.com/facebookincubator/create-react-app/issues/2677
+                  ident: 'postcss',
+                  plugins: () => [
+                    require('postcss-flexbugs-fixes'),
+                    autoprefixer({
+                      browsers: [
+                        '>1%',
+                        'last 4 versions',
+                        'Firefox ESR',
+                        'not ie < 9', // React doesn't support IE8 anyway
+                      ],
+                      flexbox: 'no-2009',
+                    }),
+                  ],
+                },
+              },
+              {
+                loader: require.resolve('less-loader'),
+                options: {
+                  javascriptEnabled: true,
+                  modifyVars: themeConfig || {},
+                },
+              },
             ],
             include: /node_modules/,
           },

@@ -27,12 +27,16 @@ const chalk = require('chalk');
 const fs = require('fs-extra');
 const webpack = require('webpack');
 const config = require('../config/webpack.config.prod');
+const amdConfig = require('../config/webpack.config.amd.prod');
 const paths = require('../config/paths');
 const checkRequiredFiles = require('react-dev-utils/checkRequiredFiles');
 const formatWebpackMessages = require('react-dev-utils/formatWebpackMessages');
 const printHostingInstructions = require('react-dev-utils/printHostingInstructions');
 const FileSizeReporter = require('react-dev-utils/FileSizeReporter');
 const printBuildError = require('react-dev-utils/printBuildError');
+
+const configType = process.argv[2] || 'all';
+const configs = getConfigs(configType);
 
 const measureFileSizesBeforeBuild =
   FileSizeReporter.measureFileSizesBeforeBuild;
@@ -108,11 +112,26 @@ measureFileSizesBeforeBuild(paths.appBuild)
     }
   );
 
+// 组装webpack配置
+function getConfigs(configType) {
+  if (configType === 'webpack') {
+    return config;
+  } else if (configType === 'amd') {
+    return amdConfig;
+  } else if (configType === 'all') {
+    return [config, amdConfig];
+  }
+  console.log(
+    chalk.red('Build arg should be one of "webpack", "amd", "all", "".\n')
+  );
+  process.exit(1);
+}
+
 // Create the production build and print the deployment instructions.
 function build(previousFileSizes) {
   console.log('Creating an optimized production build...');
 
-  let compiler = webpack(config);
+  let compiler = webpack(configs);
   return new Promise((resolve, reject) => {
     compiler.run((err, stats) => {
       if (err) {
