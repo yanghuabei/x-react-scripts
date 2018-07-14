@@ -123,3 +123,5 @@ if (
   };
 }
 // @remove-on-eject-end
+
+module.exports.srcPaths = [module.exports.appSrc];
