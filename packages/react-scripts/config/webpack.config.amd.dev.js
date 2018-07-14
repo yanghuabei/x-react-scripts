@@ -211,8 +211,7 @@ module.exports = {
           // The preset includes JSX, Flow, and some ESnext features.
           {
             test: /\.(js|jsx|mjs)$/,
-            include: paths.srcPaths,
-            exclude: [/[/\\\\]node_modules[/\\\\]/],
+            include: [paths.srcPaths, /node_modules\/antd\/es/],
             use: [
               // This loader parallelizes code compilation, it is optional but
               // improves compile time on larger projects
