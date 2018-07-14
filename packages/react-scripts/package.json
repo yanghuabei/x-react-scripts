@@ -1,14 +1,14 @@
 {
   "name": "x-react-scripts-for-pa",
-  "version": "0.0.6-alpha.1",
+  "version": "0.0.7-alpha.1",
   "description": "Configuration and scripts for Create React App.",
-  "repository": "Exodia/create-react-app",
+  "repository": "https://github.com/yanghuabei/x-react-scripts",
   "license": "MIT",
   "engines": {
     "node": ">=6"
   },
   "bugs": {
-    "url": "https://github.com/Exodia/create-react-app/issues"
+    "url": "https://github.com/yanghuabei/x-react-scripts/issues"
   },
   "files": [
     "bin",
