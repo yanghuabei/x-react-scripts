@@ -52,7 +52,10 @@ compiler.watch(
     if (err) {
       console.log(err);
     }
-    const messages = formatWebpackMessages(stats.toJson({}, true));
+    const jsonStats = stats.toJson({}, true);
+    console.log(chalk.green(`Build cost: ${jsonStats.time / 1000}s`));
+
+    const messages = formatWebpackMessages(jsonStats);
     if (messages.errors.length) {
       console.log(messages.errors[0]);
     }

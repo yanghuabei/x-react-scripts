@@ -11,16 +11,13 @@
 const autoprefixer = require('autoprefixer');
 const path = require('path');
 const webpack = require('webpack');
-const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
-const WatchMissingNodeModulesPlugin = require('react-dev-utils/WatchMissingNodeModulesPlugin');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
-const ManifestPlugin = require('webpack-manifest-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const eslintFormatter = require('react-dev-utils/eslintFormatter');
-const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const paths = require('./paths');
 const getClientEnvironment = require('./env');
 const getThemeConfig = require('./theme');
 
+// amd模块入口文件
 const amdEntry = require(paths.appPackageJson).amdEntry || {
   amd: paths.appAmdJs,
 };
@@ -28,6 +25,8 @@ const amdEntry = require(paths.appPackageJson).amdEntry || {
 // Webpack uses `publicPath` to determine where the app is being served from.
 // It requires a trailing slash, or the file assets will get an incorrect path.
 const publicPath = '/app/build/';
+// Source maps are resource heavy and can cause out of memory issue for large source files.
+const shouldUseSourceMap = true;
 // `publicUrl` is just like `publicPath`, but we will provide it to our app
 // as %PUBLIC_URL% in `index.html` and `process.env.PUBLIC_URL` in JavaScript.
 // Omit trailing slash as %PUBLIC_URL%/xyz looks better than %PUBLIC_URL%xyz.
@@ -38,24 +37,77 @@ const env = getClientEnvironment(publicUrl);
 // antd theme config
 const themeConfig = getThemeConfig({ publicPath });
 
+// Assert this just to be safe.
+if (env.stringified['process.env'].NODE_ENV !== '"development"') {
+  throw new Error('Development builds must have NODE_ENV=development.');
+}
+
 // Note: defined here because it will be used more than once.
 const cssFilename = 'amd/css/main.css';
 
-// ExtractTextPlugin expects the build output to be flat.
-// (See https://github.com/webpack-contrib/extract-text-webpack-plugin/issues/27)
-// However, our output is structured with css, js and media folders.
-// To have this structure working with relative paths, we have to use custom options.
-const extractTextPluginOptions = {
-  publicPath: Array(cssFilename.split('/').length).join('../'),
+// style files regexes
+const cssRegex = /\.css$/;
+const cssModuleRegex = /\.module\.css$/;
+const lessRegex = /\.less$/;
+const lessModuleRegex = /\.module\.less/;
+
+// common function to get style loaders
+const getStyleLoaders = (cssOptions, preProcessor, forAntd) => {
+  const loaders = [
+    MiniCssExtractPlugin.loader,
+    {
+      loader: require.resolve('css-loader'),
+      options: cssOptions,
+    },
+    {
+      // Options for PostCSS as we reference these options twice
+      // Adds vendor prefixing based on your specified browser support in
+      // package.json
+      loader: require.resolve('postcss-loader'),
+      options: {
+        // Necessary for external CSS imports to work
+        // https://github.com/facebook/create-react-app/issues/2677
+        ident: 'postcss',
+        sourceMap: shouldUseSourceMap,
+        plugins: () => [
+          require('postcss-flexbugs-fixes'),
+          autoprefixer({
+            browsers: [
+              '>1%',
+              'last 4 versions',
+              'Firefox ESR',
+              'not ie < 9', // React doesn't support IE8 anyway
+            ],
+            flexbox: 'no-2009',
+          }),
+        ],
+      },
+    },
+  ];
+  if (preProcessor) {
+    const options = Object.assign(
+      { sourceMap: shouldUseSourceMap },
+      forAntd
+        ? {
+            javascriptEnabled: true,
+            modifyVars: themeConfig || {},
+          }
+        : {}
+    );
+    loaders.push({
+      loader: require.resolve(preProcessor),
+      options: options,
+    });
+  }
+  return loaders;
 };
 
 // This is the production configuration.
 // It compiles slowly and is focused on producing a fast and minimal bundle.
 // The development configuration is different and lives in a separate file.
 module.exports = {
-  // You may want 'eval' instead if you prefer to see the compiled output in DevTools.
-  // See the discussion in https://github.com/facebookincubator/create-react-app/issues/343.
-  devtool: 'source-map',
+  mode: 'development',
+  devtool: 'cheap-module-source-map',
   // Just compile amd js.
   entry: amdEntry,
   output: {
@@ -63,13 +115,13 @@ module.exports = {
     pathinfo: true,
     // The build folder.
     path: paths.appBuild,
+    libraryTarget: 'amd',
     // Generated JS file names (with nested folders).
     // There will be one main bundle, and one file per asynchronous chunk.
     // We don't currently advertise code splitting but Webpack supports it.
     filename: 'amd/js/[name].js',
     // We inferred the "public path" (such as / or /my-project) from homepage.
     publicPath: publicPath,
-    libraryTarget: 'amd',
     // Point sourcemap entries to original disk location (format as URL on Windows)
     devtoolModuleFilenameTemplate: info =>
       path
@@ -107,21 +159,12 @@ module.exports = {
       // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
       'react-native': 'react-native-web',
     },
-    plugins: [
-      // Prevents users from importing files from outside of src/ (or node_modules/).
-      // This often causes confusion because we only process files within src/ with babel.
-      // To fix this, we prevent you from importing files out of src/ -- if you'd like to,
-      // please link the files into your node_modules/ and let module-resolution kick in.
-      // Make sure your source files are compiled, as they will not be processed in any way.
-      new ModuleScopePlugin(paths.appSrc, [paths.appPackageJson]),
-    ],
   },
   module: {
     strictExportPresence: true,
     rules: [
-      // TODO: Disable require.ensure as it's not a standard language feature.
-      // We are waiting for https://github.com/facebookincubator/create-react-app/issues/2176.
-      // { parser: { requireEnsure: false } },
+      // Disable require.ensure as it's not a standard language feature.
+      { parser: { requireEnsure: false } },
 
       // First, run the linter.
       // It's important to do this before Babel processes the JS.
@@ -133,12 +176,12 @@ module.exports = {
             options: {
               formatter: eslintFormatter,
               eslintPath: require.resolve('eslint'),
-              // @remove-on-eject-begin
               // TODO: consider separate config for production,
               // e.g. to enable no-console and no-debugger only in production.
               baseConfig: {
                 extends: [require.resolve('eslint-config-react-app')],
               },
+              // @remove-on-eject-begin
               ignore: false,
               useEslintrc: false,
               // @remove-on-eject-end
@@ -146,7 +189,8 @@ module.exports = {
             loader: require.resolve('eslint-loader'),
           },
         ],
-        include: paths.appSrc,
+        include: paths.srcPaths,
+        exclude: [/[/\\\\]node_modules[/\\\\]/],
       },
       {
         // "oneOf" will traverse all following loaders until one will
@@ -163,146 +207,107 @@ module.exports = {
               name: 'amd/media/[name].[hash:8].[ext]',
             },
           },
-          // Process JS with Babel.
+          // Process application JS with Babel.
+          // The preset includes JSX, Flow, and some ESnext features.
           {
             test: /\.(js|jsx|mjs)$/,
-            include: [paths.appSrc, /node_modules\/antd\/es/],
-            loader: require.resolve('babel-loader'),
-            options: {
-              // @remove-on-eject-begin
-              babelrc: false,
-              presets: [require.resolve('babel-preset-react-app')],
-              plugins: [
-                require.resolve('babel-plugin-transform-decorators-legacy'),
-                require.resolve('babel-plugin-transform-do-expressions'),
-                [
-                  require.resolve('babel-plugin-import'),
-                  { libraryName: 'antd', libraryDirectory: 'es', style: true },
-                ],
-              ],
-              // @remove-on-eject-end
-              // This is a feature of `babel-loader` for webpack (not Babel itself).
-              // It enables caching results in ./node_modules/.cache/babel-loader/
-              // directory for faster rebuilds.
-              cacheDirectory: true,
-            },
+            include: paths.srcPaths,
+            exclude: [/[/\\\\]node_modules[/\\\\]/],
+            use: [
+              // This loader parallelizes code compilation, it is optional but
+              // improves compile time on larger projects
+              require.resolve('thread-loader'),
+              {
+                loader: require.resolve('babel-loader'),
+                options: {
+                  // @remove-on-eject-begin
+                  babelrc: false,
+                  // @remove-on-eject-end
+                  presets: [require.resolve('babel-preset-react-app')],
+                  plugins: [
+                    require.resolve('babel-plugin-transform-decorators-legacy'),
+                    require.resolve('babel-plugin-transform-do-expressions'),
+                    [
+                      require.resolve('babel-plugin-import'),
+                      {
+                        libraryName: 'antd',
+                        libraryDirectory: 'es',
+                        style: true,
+                      },
+                    ],
+                  ],
+                  // This is a feature of `babel-loader` for webpack (not Babel itself).
+                  // It enables caching results in ./node_modules/.cache/babel-loader/
+                  // directory for faster rebuilds.
+                  cacheDirectory: true,
+                  highlightCode: true,
+                },
+              },
+            ],
           },
-          // The notation here is somewhat confusing.
           // "postcss" loader applies autoprefixer to our CSS.
           // "css" loader resolves paths in CSS and adds assets as dependencies.
-          // "style" loader normally turns CSS into JS modules injecting <style>,
-          // but unlike in development configuration, we do something different.
-          // `ExtractTextPlugin` first applies the "postcss" and "css" loaders
-          // (second argument), then grabs the result CSS and puts it into a
-          // separate file in our build process. This way we actually ship
-          // a single CSS file in production instead of JS code injecting <style>
-          // tags. If you use code splitting, however, any async bundles will still
-          // use the "style" loader inside the async code so CSS from them won't be
-          // in the main CSS file.
+          // `MiniCSSExtractPlugin` extracts styles into CSS
+          // files. If you use code splitting, async bundles will have their own separate CSS chunk file.
+          // By default we support CSS Modules with the extension .module.css
           {
-            test: /\.less$/,
-            loader: ExtractTextPlugin.extract(
-              Object.assign(
-                {
-                  fallback: {
-                    loader: require.resolve('style-loader'),
-                    options: {
-                      hmr: false,
-                    },
-                  },
-                  use: [
-                    {
-                      loader: require.resolve('css-loader'),
-                      options: {
-                        importLoaders: 1,
-                        sourceMap: true,
-                        modules: true,
-                        localIdentName: '[name]__[local]___[hash:base64:5]',
-                        camelCase: true,
-                      },
-                    },
-                    {
-                      loader: require.resolve('postcss-loader'),
-                      options: {
-                        // Necessary for external CSS imports to work
-                        // https://github.com/facebookincubator/create-react-app/issues/2677
-                        ident: 'postcss',
-                        plugins: () => [
-                          require('postcss-flexbugs-fixes'),
-                          autoprefixer({
-                            browsers: [
-                              '>1%',
-                              'last 4 versions',
-                              'Firefox ESR',
-                              'not ie < 9', // React doesn't support IE8 anyway
-                            ],
-                            flexbox: 'no-2009',
-                          }),
-                        ],
-                      },
-                    },
-                    {
-                      loader: require.resolve('less-loader'),
-                      options: {
-                        javascriptEnabled: true,
-                      },
-                    },
-                  ],
-                },
-                extractTextPluginOptions
-              )
+            test: cssRegex,
+            exclude: cssModuleRegex,
+            loader: getStyleLoaders({
+              importLoaders: 1,
+              sourceMap: shouldUseSourceMap,
+            }),
+          },
+          // Adds support for CSS Modules (https://github.com/css-modules/css-modules)
+          // using the extension .module.css
+          {
+            test: cssModuleRegex,
+            loader: getStyleLoaders({
+              importLoaders: 1,
+              sourceMap: shouldUseSourceMap,
+              modules: true,
+              localIdentName: '[name]__[local]___[hash:base64:5]',
+              camelCase: true,
+            }),
+          },
+          {
+            test: lessRegex,
+            exclude: [lessModuleRegex, /node_modules\/antd\/.*\.less$/],
+            use: getStyleLoaders(
+              {
+                importLoaders: 2,
+                modules: true,
+                sourceMap: shouldUseSourceMap,
+                localIdentName: '[name]__[local]___[hash:base64:5]',
+                camelCase: true,
+              },
+              'less-loader'
             ),
-            include: [paths.appSrc],
-
-            // Note: this won't work without `new ExtractTextPlugin()` in `plugins`.
+          },
+          {
+            test: lessModuleRegex,
+            use: getStyleLoaders(
+              {
+                importLoaders: 2,
+                modules: true,
+                sourceMap: shouldUseSourceMap,
+                localIdentName: '[name]__[local]___[hash:base64:5]',
+                camelCase: true,
+              },
+              'less-loader'
+            ),
           },
           // for antd
           {
-            test: /antd.*\.less$/,
-            use: ExtractTextPlugin.extract(
-              Object.assign(
-                {
-                  fallback: require.resolve('style-loader'),
-                  use: [
-                    {
-                      loader: require.resolve('css-loader'),
-                      options: {
-                        sourceMap: 1,
-                      },
-                    },
-                    {
-                      loader: require.resolve('postcss-loader'),
-                      options: {
-                        // Necessary for external CSS imports to work
-                        // https://github.com/facebookincubator/create-react-app/issues/2677
-                        ident: 'postcss',
-                        plugins: () => [
-                          require('postcss-flexbugs-fixes'),
-                          autoprefixer({
-                            browsers: [
-                              '>1%',
-                              'last 4 versions',
-                              'Firefox ESR',
-                              'not ie < 9', // React doesn't support IE8 anyway
-                            ],
-                            flexbox: 'no-2009',
-                          }),
-                        ],
-                      },
-                    },
-                    {
-                      loader: require.resolve('less-loader'),
-                      options: {
-                        javascriptEnabled: true,
-                        modifyVars: themeConfig || {},
-                      },
-                    },
-                  ],
-                },
-                extractTextPluginOptions
-              )
+            test: /node_modules\/antd\/.*\.less$/,
+            use: getStyleLoaders(
+              {
+                importLoaders: 2,
+                sourceMap: shouldUseSourceMap,
+              },
+              'less-loader',
+              true
             ),
-            include: /node_modules/,
           },
           // "file" loader makes sure assets end up in the `build` folder.
           // When you `import` an asset, you get its filename.
@@ -326,50 +331,15 @@ module.exports = {
     ],
   },
   plugins: [
-    // Add module names to factory functions so they appear in browser profiler.
-    new webpack.NamedModulesPlugin(),
     // Makes some environment variables available to the JS code, for example:
     // if (process.env.NODE_ENV === 'production') { ... }. See `./env.js`.
     // It is absolutely essential that NODE_ENV was set to production here.
     // Otherwise React will be compiled in the very slow development mode.
     new webpack.DefinePlugin(env.stringified),
-    // Watcher doesn't work well if you mistype casing in a path so we use
-    // a plugin that prints an error when you attempt to do this.
-    // See https://github.com/facebookincubator/create-react-app/issues/240
-    new CaseSensitivePathsPlugin(),
-    // If you require a missing module and then `npm install` it, you still have
-    // to restart the development server for Webpack to discover it. This plugin
-    // makes the discovery automatic so you don't have to restart.
-    // See https://github.com/facebookincubator/create-react-app/issues/186
-    new WatchMissingNodeModulesPlugin(paths.appNodeModules),
-    // Minify the code.
-    new webpack.optimize.UglifyJsPlugin({
-      compress: {
-        warnings: false,
-        // Disabled because of an issue with Uglify breaking seemingly valid code:
-        // https://github.com/facebookincubator/create-react-app/issues/2376
-        // Pending further investigation:
-        // https://github.com/mishoo/UglifyJS2/issues/2011
-        comparisons: false,
-      },
-      mangle: false,
-      output: {
-        comments: false,
-        // Turned on because emoji and regex is not minified properly using default
-        // https://github.com/facebookincubator/create-react-app/issues/2488
-        ascii_only: true,
-      },
-      sourceMap: true,
-    }),
-    // Note: this won't work without ExtractTextPlugin.extract(..) in `loaders`.
-    new ExtractTextPlugin({
+    new MiniCssExtractPlugin({
+      // Options similar to the same options in webpackOptions.output
+      // both options are optional
       filename: cssFilename,
-    }),
-    // Generate a manifest file which contains a mapping of all asset filenames
-    // to their corresponding output file so that tools can pick it up without
-    // having to parse `index.html`.
-    new ManifestPlugin({
-      fileName: 'asset-manifest.json',
     }),
     // Moment.js is an extremely popular library that bundles large locale files
     // by default due to how Webpack interprets its code. This is a practical
@@ -387,4 +357,7 @@ module.exports = {
     tls: 'empty',
     child_process: 'empty',
   },
+  // Turn off performance processing because we utilize
+  // our own hints via the FileSizeReporter
+  performance: false,
 };
